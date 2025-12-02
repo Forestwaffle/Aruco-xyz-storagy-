@@ -1,4 +1,1 @@
-# Aruco-xyz-storagy-
-aruco marker 추적과 간단한 자율 주행로직
-
-
+🤖 Aruco-LiDAR Follower (ROS2 Foxy/Humble)ArUco 마커 기반의 정밀 추적 기능과 LiDAR 기반의 실시간 장애물 회피 기능을 통합한 자율 이동 로봇(AMR) 제어 노드입니다. 특정 마커를 목표($0.6\text{m}$ 거리)로 설정하고, 탐색-추적-정지-회피의 계층적 로직을 통해 목표에 안전하고 정확하게 도킹하는 것을 목적으로 합니다.
