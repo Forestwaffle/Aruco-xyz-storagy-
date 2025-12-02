@@ -1,2 +1,75 @@
 # Aruco-xyz-storagy-
 aruco marker 추적과 간단한 자율 주행로직
+
+
+┌───────────────────────────────┐
+│          프로그램 시작        │
+└───────────────┬───────────────┘
+                │
+                ▼
+      카메라 + LiDAR 데이터 수신
+                │
+                ▼
+         Aruco 태그 감지됨? 
+        ┌───────────┴───────────┐
+        │                       │
+      (YES)                    (NO)
+        │                       │
+        ▼                       ▼
+   태그 추적(P1)             LiDAR 장애물 감지?
+        │                       │
+        │                       ┌───────────┴───────────┐
+        │                       │                       │
+   위치/거리 P제어               (YES)                    (NO)
+   latest_linear_x,             ▼                       ▼
+   latest_angular_z      장애물 회피(P2)                탐색(P3)
+   전진/회전 명령          정지 + 오른쪽 회전              천천히 전진
+        │                       │                       │
+        ▼                       ▼                       ▼
+ Twist 명령 발행(/cmd_vel)  Twist 명령 발행           Twist 명령 발행
+        │                       │                       │
+        └───────────────┬───────┴───────────────────────┘
+                        ▼
+                    루프 반복
+
+
+
+-------------------------------------------------------------------------------------------------------
+
+┌──────────────────────────────┐
+│    이미지에서 ArUco 태그 검출?  │
+└───────────────┬──────────────┘
+                │
+           (YES)│
+                ▼
+   TARGET_ID (0) 태그인가?
+        ┌───────┴───────┐
+       YES             NO
+        │               │
+        ▼               ▼
+solvePnP로 3D 위치 추정  탐색 상태 유지
+(x_pos, y_pos, z_pos)
+        │
+        ▼
+    P-Control 계산
+    - angular_z = -KP * x_pos
+    - linear_x = KP * (z_pos - TARGET_DIST)
+        │
+        ▼
+미세 정지 영역 판단
+- |x_pos| < MARKER_STOP_TH ?
+- |y_pos| < MARKER_STOP_TH ?
+- |z_pos - TARGET_DIST| < MARKER_STOP_TH ?
+        │
+   ┌────┴─────┐
+   │          │
+  YES        NO
+   │          │
+   ▼          ▼
+정밀 정지      P-Control 명령 유지
+linear_x=0    linear_x=KP*(z_pos-TARGET_DIST)
+angular_z=0   angular_z=-KP*x_pos
+        │
+        ▼
+Twist 명령 업데이트
+(latest_linear_x, latest_angular_z)
